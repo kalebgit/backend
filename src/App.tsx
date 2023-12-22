@@ -46,7 +46,31 @@ function App() {
       if(this.getInstanceById(instance.id)){
         throw new DuplicateID("No puedes ingresar un id que ya ha sido registrado, vuelve a intentarlo")
       }else{
-        this._instances.push(instance)
+        this.readFileAndUpdateInstances()
+          .then(()=>{
+            this._instances.push(instance)
+            console.log("el elemento fue agregado")
+          })
+          .catch((err)=>{
+            console.log(err)
+          })
+        
+      }
+    }
+
+    public addInstances(instances: T[]): void{
+      if(this._instances.some((value: T)=>instances.some((ArgumentValue: T)=>value.id == ArgumentValue.id))){
+        throw new DuplicateID("No puedes ingresar un id que ya ha sido registrado, vuelve a intentarlo")
+      }else{
+        this.readFileAndUpdateInstances()
+          .then(()=>{
+            this._instances = this._instances.concat(instances)
+            console.log("los elementos fueron agregados")
+          })
+          .catch((err)=>{
+            console.log(err)
+          })
+        
       }
     }
 
@@ -62,12 +86,40 @@ function App() {
       
     }
 
+
+    //FUNCTION TO UPDATE AN INSTANCE
     public updateInstance(id: number, newInstance: T): void{
-      if(id == newInstance.id){
-        const index: number = this._instances.findIndex((value: T)=>value.id == id)
-        this._instances[index] = newInstance
-        this.writeFile()
-      }
+      this.readFileAndUpdateInstances()
+        .then(()=>{
+          if(this.getInstanceById(id) && id == newInstance.id){
+            const index: number = this._instances.findIndex((value: T)=>value.id == id)
+            this._instances[index] = newInstance
+            this.writeFile()
+            console.log("El elemento fue actualizado")
+          }
+          else{
+            throw new InstanceNotFound("elemento no encontrado por id")
+          }
+        })
+        .catch((err)=>{
+          console.log(err)
+        })
+      
+    }
+
+    //FUNCTION TO DELETE AN INSTANCE
+    public deleteInstance(id: number): void{
+      this.readFileAndUpdateInstances()
+        .then(()=>{
+          if(this.getInstanceById(id)){
+            const index: number = this._instances.findIndex((value: T)=>value.id == id)
+            this._instances.splice(index, 1)
+            this.writeFile()
+          }
+          else{
+            throw new InstanceNotFound("elemento no encontrado por id")
+          }
+        })
     }
 
 
@@ -78,6 +130,7 @@ function App() {
       })  
       return instanceFound
     }
+
 
 
     //FUNCTION TO WRITE ON THE FILE
@@ -128,7 +181,8 @@ function App() {
     private static idCounter: number = 0
 
     constructor(public username: string, private password: string, 
-      public name: string, public lastName:string, public age: number){
+      public name: string, public lastName:string, public age: number
+      ){
         super(User.idCounter)
         User.idCounter++
       }
@@ -136,11 +190,33 @@ function App() {
 
 
   try{
+    const pathProducts: string = ".\\data\\products.txt"
+    const pathUsers: string = ".\\data\\users.txt"
+    
+    const users = [new User("Emilianokal", "Kjimenez05#", "Emiliano", "Jimenez", 18),
+    new User("Pedromar", "Pmartinez01#", "Pedro", "Martinez", 23),
+    new User("Lunagon", "Lgonzalez02#", "Luna", "Gonzalez", 20),
+    new User("Anague", "Aguerrero03$", "Ana", "Guerrero", 27),
+    new User("Carlosriv", "Crivas04$", "Carlos", "Rivas", 30)]
+
+    const products = [new Product("Pastel de chocolate", " rebanada de Chocolate con vainilla", 270, "path", "AAA027", 60),
+    new Product("Ensalada Cesar", "Pollo con mezcla verde", 99, "path", "BBB018", 36),
+    new Product("Helado", "Sabores fresa o chocolate", 45, "path", "CCC067", 54),
+    new Product("Pizza", "Rebanada de peperoni o hawaiana", 40, "path", "DDD009", 78),
+    new Product("Chicken Bake", "Relleno de pechuga de pollo", 65, "path", "EEE035", 87),]
+
+    let productManager: Manager<Product> = new Manager<Product>(pathProducts)
+    let usersManager: Manager<User> = new Manager<User>(pathUsers)
+
+    productManager.addInstance(products[0])
+    usersManager.addInstance(users[0])
+
 
   }catch(error){
-    
+    console.log("ups hubo un error")
+    console.log(error)
   }finally{
-
+    console.log("fin del programa")
   }
   
   
