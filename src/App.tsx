@@ -1,6 +1,8 @@
 // import { useState } from 'react'
 import './App.css'
-import * as fs from 'fs'
+import * as promises from 'fs/promises'
+import usersFile from './data/users.txt'
+import productsFile from './data/products.txt'
 
 function App() {
 
@@ -135,7 +137,7 @@ function App() {
 
     //FUNCTION TO WRITE ON THE FILE
     public writeFile(): void{
-      fs.promises.writeFile(this.file, JSON.stringify(this._instances), {encoding: 'utf-8'})
+      promises.writeFile(this.file, JSON.stringify(this._instances), {encoding: 'utf-8'})
         .then((value: any)=>{
           console.log("resultado de la escritura del archivo: " + value)
         })
@@ -148,7 +150,9 @@ function App() {
     //ASYNC FUNCTION TO UPDATE THE INSTANCES FROM THE FILE
     public async readFileAndUpdateInstances(): Promise<(T | void)>{
       try{
-        this._instances = JSON.parse(await fs.promises.readFile(this.file, {encoding: 'utf-8'})) as T[]
+        console.log(this.file)
+        console.log(promises)
+        this._instances = JSON.parse(await promises.readFile(this.file.toString(), {encoding: 'utf-8'})) as T[]
         return Promise.resolve()
       }
       catch(err){
@@ -163,7 +167,7 @@ function App() {
 
   //PRODUCT
   class Product extends Instance{
-    [index: (string)]: (string | number)
+    [index: (string)]: any
     private static idCounter: number = 0
     //using index signatures to access 
     
@@ -176,7 +180,7 @@ function App() {
   }
 
   class User extends Instance{
-    [index: (string)]: string | number
+    [index: (string)]: any
 
     private static idCounter: number = 0
 
@@ -186,6 +190,10 @@ function App() {
         super(User.idCounter)
         User.idCounter++
       }
+    
+    public dummyFunction(): void{
+      this.password = this.password
+    }
   }
 
 
@@ -205,12 +213,11 @@ function App() {
     new Product("Pizza", "Rebanada de peperoni o hawaiana", 40, "path", "DDD009", 78),
     new Product("Chicken Bake", "Relleno de pechuga de pollo", 65, "path", "EEE035", 87),]
 
-    let productManager: Manager<Product> = new Manager<Product>(pathProducts)
-    let usersManager: Manager<User> = new Manager<User>(pathUsers)
+    let productManager: Manager<Product> = new Manager<Product>(productsFile)
+    let usersManager: Manager<User> = new Manager<User>(usersFile)
 
     productManager.addInstance(products[0])
     usersManager.addInstance(users[0])
-
 
   }catch(error){
     console.log("ups hubo un error")
